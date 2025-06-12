@@ -1,6 +1,15 @@
+// {
+//   "extends": "expo/tsconfig.base",
+//   "compilerOptions": {
+//     "strict": true
+//   }
+// }
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "jsx": "react-native",        // ✅ Enable JSX for React Native
+    "lib": ["esnext", "dom"],     // ✅ Include DOM types for JSX.Element
+    "types": ["react", "react-native"] // ✅ Ensure React types are included
   }
 }

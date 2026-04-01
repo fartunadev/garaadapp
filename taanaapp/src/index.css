@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 200 18% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 200 18% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 18% 20%;
+
+    /* Teal primary color scheme */
+    --primary: 185 94% 22%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 185 94% 18%;
+
+    /* Trust/Success color */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    /* Secondary actions */
+    --secondary: 200 12% 93%;
+    --secondary-foreground: 200 18% 25%;
+
+    --muted: 200 12% 96%;
+    --muted-foreground: 200 10% 45%;
+
+    /* Accent - lighter teal */
+    --accent: 187 72% 57%;
+    --accent-foreground: 200 18% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 20% 90%;
+    --input: 200 20% 90%;
+    --ring: 185 94% 22%;
+
+    --radius: 0.5rem;
+
+    /* Special badges */
+    --badge-hot: 24 100% 50%;
+    --badge-new: 160 84% 39%;
+    --badge-sale: 339 90% 51%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(185 94% 22%), hsl(187 72% 57%));
+    --gradient-hero: linear-gradient(180deg, hsl(185 20% 97%), hsl(0 0% 98%));
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1);
+    --shadow-card: 0 2px 8px hsl(0 0% 0% / 0.08);
+    --shadow-hover: 0 8px 16px hsl(0 0% 0% / 0.12);
+
+    /* Animations */
+    --transition-base: all 0.2s ease;
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-size: 14px;
+  }
+}
+
+/* Hide scrollbar for horizontal scroll */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

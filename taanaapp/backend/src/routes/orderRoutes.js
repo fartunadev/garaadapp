@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import orderController from '../controllers/orderController.js';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, authorize, authorizePage } from '../middleware/auth.js';
 import { validate, orderSchemas } from '../validators/index.js';
 
 const router = Router();
@@ -11,15 +11,15 @@ router.use(authenticate);
 // User routes
 router.post('/', validate(orderSchemas.create), orderController.create);
 router.get('/my-orders', orderController.getMyOrders);
-router.get('/stats', authorize('admin', 'seller'), orderController.getStats);
+router.get('/stats', authorizePage('orders', 'can_view'), orderController.getStats);
 router.get('/:id', orderController.getById);
 router.post('/:id/cancel', orderController.cancel);
 
-// Admin/Seller routes
-router.get('/', authorize('admin', 'seller'), orderController.getAll);
+// Admin/Seller routes (permission-checked per-page/action)
+router.get('/', authorizePage('orders', 'can_view'), orderController.getAll);
 router.patch(
   '/:id/status',
-  authorize('admin', 'seller'),
+  authorizePage('orders', 'can_edit'),
   validate(orderSchemas.updateStatus),
   orderController.updateStatus
 );

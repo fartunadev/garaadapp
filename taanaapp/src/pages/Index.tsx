@@ -40,7 +40,7 @@ const Index = () => {
       <Footer />
       <BottomNav />
 
-      {/* Temu-style Floating Cart Alert */}
+      {/* -style Floating Cart Alert */}
       <FloatingCartAlert />
     </div>
   );

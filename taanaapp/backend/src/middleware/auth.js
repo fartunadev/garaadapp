@@ -49,7 +49,8 @@ const authHeader = req.headers.authorization || req.headers.Authorization;
       profileId: user.id || null,
       email: user.email,
       fullName: user.full_name,
-      roles: roles.length ? roles : [user.role || 'user'],
+      // Include a per-user pseudo-role so admin can grant user-specific permissions (e.g. "user:UUID")
+      roles: roles.length ? [...roles, `user:${user.user_id || user.id}`] : [user.role || 'user', `user:${user.user_id || user.id}`],
       role: roles.length ? roles[0] : (user.role || 'user'),
       isActive: user.is_active,
     };

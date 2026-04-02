@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
 import productController from '../controllers/productController.js';
-import { authenticate, authorize, optionalAuth } from '../middleware/auth.js';
+import { authenticate, authorize, authorizePage, optionalAuth } from '../middleware/auth.js';
 import { validate, productSchemas, paginationSchema } from '../validators/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -45,36 +45,36 @@ router.use(authenticate);
 
 // Product images
 router.get('/:id/images', optionalAuth, productController.getImages);
-router.post('/:id/images', authorize('admin', 'seller'), productController.addImage);
-router.delete('/:id/images/:imageId', authorize('admin', 'seller'), productController.removeImage);
+router.post('/:id/images', authorizePage('products', 'can_edit'), productController.addImage);
+router.delete('/:id/images/:imageId', authorizePage('products', 'can_edit'), productController.removeImage);
 // Alias: delete image by imageId only (used by frontend)
-router.delete('/images/:imageId', authorize('admin', 'seller'), productController.removeImage);
+router.delete('/images/:imageId', authorizePage('products', 'can_edit'), productController.removeImage);
 
-router.post('/upload-image', authorize('admin', 'seller'), upload.single('image'), (req, res) => {
+router.post('/upload-image', authorizePage('products', 'can_create'), upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ status: 'error', message: 'No file uploaded' });
   res.json({ status: 'success', data: { url: `/uploads/products/${req.file.filename}` } });
 });
 
 router.post(
   '/',
-  authorize('admin', 'seller'),
+  authorizePage('products', 'can_create'),
   validate(productSchemas.create),
   productController.create
 );
 
 router.put(
   '/:id',
-  authorize('admin', 'seller'),
+  authorizePage('products', 'can_edit'),
   validate(productSchemas.update),
   productController.update
 );
 
 router.patch(
   '/:id/stock',
-  authorize('admin', 'seller'),
+  authorizePage('products', 'can_edit'),
   productController.updateStock
 );
 
-router.delete('/:id', authorize('admin', 'seller'), productController.remove);
+router.delete('/:id', authorizePage('products', 'can_delete'), productController.remove);
 
 export default router;

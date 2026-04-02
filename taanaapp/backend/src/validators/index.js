@@ -243,6 +243,36 @@ export const sellerSchemas = {
   }),
 };
 
+// Slides schemas
+export const slideSchemas = {
+  create: z.object({
+    body: z.object({
+      title: z.string().min(1).optional(),
+      subtitle: z.string().optional(),
+      image_url: z.string().url().optional(),
+      cta_text: z.string().optional(),
+      cta_link: z.string().optional(),
+      slide_order: z.coerce.number().int().optional(),
+      is_active: z.boolean().optional(),
+      animation_type: z.string().optional(),
+    }),
+  }),
+
+  update: z.object({
+    params: z.object({ id: z.string() }),
+    body: z.object({
+      title: z.string().optional(),
+      subtitle: z.string().optional(),
+      image_url: z.string().url().optional(),
+      cta_text: z.string().optional(),
+      cta_link: z.string().optional(),
+      slide_order: z.coerce.number().int().optional(),
+      is_active: z.boolean().optional(),
+      animation_type: z.string().optional(),
+    }),
+  }),
+};
+
 // Address schemas
 export const addressSchemas = {
   create: z.object({
@@ -288,6 +318,7 @@ export default {
   reviewSchemas,
   userSchemas,
   sellerSchemas,
+  slideSchemas,
   addressSchemas,
   paginationSchema,
 };

@@ -11,6 +11,7 @@ import settingsRoutes from './settingsRoutes.js';
 import messageRoutes from './messageRoutes.js';
 import marketingRoutes from './marketingRoutes.js';
 import rolesRoutes from './rolesRoutes.js';
+import slidesRoutes from './slidesRoutes.js';
 
 const router = Router();
 
@@ -27,6 +28,7 @@ router.use('/settings', settingsRoutes);
 router.use('/messages', messageRoutes);
 router.use('/marketing', marketingRoutes);
 router.use('/roles', rolesRoutes);
+router.use('/slides', slidesRoutes);
 
 // API info
 router.get('/', (req, res) => {

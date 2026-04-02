@@ -87,6 +87,14 @@ const RolesPage = () => {
     },
   });
 
+  const { data: allUsers } = useQuery({
+    queryKey: ['users-all'],
+    queryFn: async () => {
+      const res = await api.get('/auth/users');
+      return (res.data?.data || []) as { id: string; email: string | null; full_name: string | null }[];
+    },
+  });
+
   const permissionsMap: Record<string, Permission> = {};
   if (dbPermissions) {
     dbPermissions.forEach((p) => {
@@ -192,7 +200,16 @@ const RolesPage = () => {
     return dbPermissions.filter(p => p.role === roleId && (p.can_view || p.can_create || p.can_edit || p.can_delete)).length;
   };
 
-  const editingRoleData = ROLES.find(r => r.id === editingRole);
+  // Determine display data for the currently editing role or user
+  let editingRoleData = ROLES.find(r => r.id === editingRole);
+  let editingUserData: { id: string; full_name?: string | null; email?: string | null } | null = null;
+  if (!editingRoleData && editingRole && editingRole.startsWith('user:') && allUsers) {
+    const userId = editingRole.split(':')[1];
+    editingUserData = allUsers.find(u => u.id === userId) || null;
+    if (editingUserData) {
+      editingRoleData = { id: editingRole, label: editingUserData.full_name || editingUserData.email || 'User', color: 'bg-muted text-muted-foreground border-border', description: 'User-specific permissions' } as any;
+    }
+  }
 
   if (isLoading) {
     return (
@@ -260,6 +277,36 @@ const RolesPage = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* User-specific permissions */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold">Users</h3>
+          <p className="text-sm text-muted-foreground">Edit permissions for individual users</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {(allUsers || []).map(u => (
+            <Card key={u.id} className="hover:border-primary/30 transition-colors">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{(u.full_name || u.email || '?')[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="text-sm font-medium">{u.full_name || u.email}</div>
+                      <div className="text-xs text-muted-foreground">{u.email}</div>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => openEditModal(`user:${u.id}`)}>
+                    <Pencil className="w-3 h-3 mr-1" /> Edit
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
       </div>
 
       <Dialog open={!!editingRole} onOpenChange={(open) => !open && setEditingRole(null)}>

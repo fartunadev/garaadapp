@@ -16,6 +16,7 @@ import MessagesPage from '@/components/admin/MessagesPage';
 import PayoutsPage from '@/components/admin/PayoutsPage';
 import ReportsPage from '@/components/admin/ReportsPage';
 import MarketingPage from '@/components/admin/MarketingPage';
+import SlidesPage from '@/components/admin/SlidesPage';
 import OrdersPage from '@/components/admin/OrdersPage';
 import NotificationBell from '@/components/admin/NotificationBell';
 import UsersPage from '@/components/admin/UsersPage';
@@ -81,7 +82,8 @@ const Admin = () => {
       { id: 'marketing', label: 'Marketing', icon: Tag },
       { id: 'reports', label: 'Reports', icon: BarChart3 },
       { id: 'settings', label: 'Settings', icon: Settings },
-      { id: 'roles', label: 'Roles', icon: Shield }
+      { id: 'roles', label: 'Roles', icon: Shield },
+      { id: 'slides', label: 'Slides', icon: Tag },
     ],
     seller: [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -232,6 +234,7 @@ const Admin = () => {
           {currentPage === 'messages' && <MessagesPage />}
           {currentPage === 'reports' && <ReportsPage />}
           {currentPage === 'marketing' && <MarketingPage />}
+          {currentPage === 'slides' && <SlidesPage />}
           {currentPage === 'addresses' && <AddressesPage />}
           {currentPage === 'settings' && <SettingsPage />}
           {currentPage === 'roles' && <RolesPage />}

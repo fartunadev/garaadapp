@@ -1,92 +1,148 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import api from '@/lib/api';
 
-
-const slides = [
+const defaultSlides = [
   {
-    id: 1,
-    bg: "from-[#4189DD] to-[#1a5cb5]",
-    title: "🇸🇴 Soomaaliya Hanoolaato",
-    subtitle: "Shop with pride — quality products for our people",
-    accent: "text-[#FBFBFB]",
-    showFlag: true,
-  },
-  {
-    id: 2,
-    bg: "from-primary to-accent",
-    title: "⚡ Up to 80% OFF",
-    subtitle: "Flash deals ending soon — don't miss out!",
-    accent: "text-yellow-300",
-    showFlag: false,
-  },
-  {
-    id: 3,
-    bg: "from-[#4189DD] to-[#2563eb]",
-    title: "🚚 Free Shipping",
-    subtitle: "On orders over $25 — delivered to your door",
-    accent: "text-white",
-    showFlag: false,
-  },
-  {
-    id: 4,
-    bg: "from-success to-[#059669]",
-    title: "✨ New Arrivals Daily",
-    subtitle: "Fresh styles added every day — be the first to shop",
-    accent: "text-yellow-200",
-    showFlag: false,
+    id: 'default-1',
+    title: 'Welcome',
+    subtitle: 'Check out our latest collections',
+    bg: 'from-primary to-accent',
+    image_url: null,
+    cta_text: null,
   },
 ];
 
 const BannerSlideshow = () => {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState<"right" | "left">("right");
-
-  const next = useCallback(() => {
-    setDirection("right");
-    setCurrent((prev) => (prev + 1) % slides.length);
-  }, []);
+  const [prev, setPrev] = useState<number>(0);
+  const [slides, setSlides] = useState<any[]>(defaultSlides);
+  const [paused, setPaused] = useState(false);
+  const autoplayRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const timer = setInterval(next, 3500);
-    return () => clearInterval(timer);
-  }, [next]);
+    let mounted = true;
+    api.get('/slides')
+      .then(res => {
+        if (!mounted) return;
+        const data = res.data?.data || [];
+        if (Array.isArray(data) && data.length > 0) {
+          setSlides(data.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            subtitle: s.subtitle,
+            image_url: s.image_url,
+            cta_text: s.cta_text,
+            cta_link: s.cta_link,
+            animation_type: s.animation_type || 'fade',
+            bg_color_start: s.bg_color_start || '#0ea5a4',
+            bg_color_end: s.bg_color_end || s.bg_color_start || '#0ea5a4',
+            bg_type: s.bg_type || 'solid',
+          })));
+        }
+      })
+      .catch(() => {
+        // ignore; keep defaults
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  const next = useCallback(() => {
+    setPrev(current);
+    setDirection("right");
+    setCurrent((current + 1) % slides.length);
+  }, [current, slides.length]);
+
+  // Autoplay every 2 seconds (2000ms). Pause on hover/focus.
+  useEffect(() => {
+    const interval = 2000; // 1-2 seconds; set to 2000ms by default
+    if (autoplayRef.current) window.clearInterval(autoplayRef.current);
+    if (!paused) {
+      autoplayRef.current = window.setInterval(() => {
+        next();
+      }, interval);
+    }
+    return () => {
+      if (autoplayRef.current) window.clearInterval(autoplayRef.current);
+      autoplayRef.current = null;
+    };
+  }, [next, paused]);
 
   const goTo = (idx: number) => {
+    setPrev(current);
     setDirection(idx > current ? "right" : "left");
     setCurrent(idx);
   };
 
-  const slide = slides[current];
+  const slide = slides[current] || defaultSlides[0];
 
   return (
     <div className="container mx-auto px-2 py-2">
-      <div className="relative overflow-hidden rounded-xl h-[100px] md:h-[110px]">
+      <div
+        className="relative overflow-hidden rounded-xl h-[120px] md:h-[140px]"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
         {/* Slide */}
-        <div
-          key={slide.id}
-          className={`absolute inset-0 bg-gradient-to-r ${slide.bg} flex items-center px-5 md:px-8 animate-slide-in-right`}
-          style={{
-            animation: `${direction === "right" ? "slideFromRight" : "slideFromLeft"} 0.45s cubic-bezier(0.4,0,0.2,1) forwards`,
-          }}
-        >
-         
+        {slides.map((s, idx) => {
+          const isEntering = idx === current;
+          const isExiting = idx === prev && prev !== current;
 
-          {/* Text content */}
-          <div className="relative z-10 max-w-[70%]">
-            <h2 className={`text-lg md:text-2xl font-extrabold ${slide.accent} leading-tight drop-shadow-sm`}>
-              {slide.title}
-            </h2>
-            <p className="text-white/90 text-xs md:text-sm mt-1 font-medium leading-snug">
-              {slide.subtitle}
-            </p>
-          </div>
+          // choose animation name based on slide type and whether entering/exiting
+          let anim = '';
+          if (s.animation_type === 'slide') {
+            if (isEntering) anim = direction === 'right' ? 'enterFromRight' : 'enterFromLeft';
+            else if (isExiting) anim = direction === 'right' ? 'exitToLeft' : 'exitToRight';
+          } else if (s.animation_type === 'zoom') {
+            if (isEntering) anim = 'enterZoom';
+            else if (isExiting) anim = 'exitZoom';
+          } else {
+            // fade
+            if (isEntering) anim = 'enterFade';
+            else if (isExiting) anim = 'exitFade';
+          }
 
-          {/* Decorative circles */}
-          <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full" />
-          <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-white/5 rounded-full" />
-        </div>
+          const style: any = {
+            animation: anim ? `${anim} 650ms cubic-bezier(0.4,0,0.2,1) forwards` : undefined,
+            // let the keyframes drive opacity/transform; use z-index to layer slides
+            zIndex: isEntering ? 20 : (isExiting ? 10 : 0),
+            pointerEvents: isEntering ? 'auto' : 'none',
+          };
+
+          return (
+            <div key={s.id || idx} className="absolute inset-0 flex items-center" style={style}>
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: s.bg_type === 'gradient' && s.bg_color_start && s.bg_color_end
+                    ? `linear-gradient(90deg, ${s.bg_color_start}, ${s.bg_color_end})`
+                    : (s.bg_color_start || '#0ea5a4')
+                }}
+              />
+
+              <div className="relative z-10 w-full px-4 md:px-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 pr-4">
+                    <h3 className="text-sm md:text-base text-white font-bold truncate">{s.title}</h3>
+                    <p className="text-white/95 text-base md:text-lg font-semibold leading-tight truncate">{s.subtitle}</p>
+                  </div>
+
+                  <div className="w-36 flex-shrink-0 ml-4">
+                    {s.image_url ? (
+                      <img src={s.image_url} alt={s.title || ''} className="w-full h-20 object-cover rounded shadow-sm border" />
+                    ) : (
+                      <div className="w-full h-20 rounded border" style={{ background: s.bg_type === 'gradient' && s.bg_color_start && s.bg_color_end ? `linear-gradient(90deg, ${s.bg_color_start}, ${s.bg_color_end})` : (s.bg_color_start || '#eee') }} />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        
 
         {/* Dots */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
           {slides.map((_, idx) => (
             <button
               key={idx}
@@ -103,6 +159,38 @@ const BannerSlideshow = () => {
 
       {/* Inline keyframes */}
       <style>{`
+        @keyframes enterFromRight {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes enterFromLeft {
+          from { transform: translateX(-100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes exitToLeft {
+          from { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(-50%); opacity: 0; }
+        }
+        @keyframes exitToRight {
+          from { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(50%); opacity: 0; }
+        }
+        @keyframes enterZoom {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes exitZoom {
+          from { transform: scale(1); opacity: 1; }
+          to { transform: scale(1.05); opacity: 0; }
+        }
+        @keyframes enterFade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes exitFade {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
         @keyframes slideFromRight {
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }

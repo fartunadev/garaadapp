@@ -60,7 +60,21 @@ const ACTION_LABELS: Record<string, string> = {
   can_delete: 'Delete',
 };
 
-const RolesPage = () => {
+const ROLE_NAV: Record<string, string> = {
+  admin: 'dashboard',
+  moderator: 'users',
+  seller: 'sellers',
+  user: 'users',
+};
+
+const ROLE_COLORS: Record<string, string> = {
+  admin: 'bg-red-500/10 text-red-600 border-red-200',
+  seller: 'bg-blue-500/10 text-blue-600 border-blue-200',
+  moderator: 'bg-amber-500/10 text-amber-600 border-amber-200',
+  user: 'bg-green-500/10 text-green-600 border-green-200',
+};
+
+const RolesPage = ({ onNavigate }: { onNavigate?: (page: string) => void }) => {
   const queryClient = useQueryClient();
   const [editingRole, setEditingRole] = useState<string | null>(null);
   const [modalPermissions, setModalPermissions] = useState<Record<string, Permission>>({});
@@ -86,6 +100,14 @@ const RolesPage = () => {
       return grouped;
     },
   });
+
+  // Build userId → role map
+  const userRoleMap: Record<string, string> = {};
+  if (roleUsers) {
+    Object.entries(roleUsers).forEach(([role, users]) => {
+      users.forEach(u => { userRoleMap[u.user_id] = role; });
+    });
+  }
 
   const { data: allUsers } = useQuery({
     queryKey: ['users-all'],
@@ -279,33 +301,44 @@ const RolesPage = () => {
         ))}
       </div>
 
-      {/* User-specific permissions */}
+      {/* All Users */}
       <div className="mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Users</h3>
-          <p className="text-sm text-muted-foreground">Edit permissions for individual users</p>
+          <h3 className="text-lg font-semibold">All Users</h3>
+          <p className="text-sm text-muted-foreground">{(allUsers || []).length} total users</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {(allUsers || []).map(u => (
-            <Card key={u.id} className="hover:border-primary/30 transition-colors">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{(u.full_name || u.email || '?')[0]?.toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="text-sm font-medium">{u.full_name || u.email}</div>
-                      <div className="text-xs text-muted-foreground">{u.email}</div>
+          {(allUsers || []).map(u => {
+            const role = userRoleMap[u.id] || 'user';
+            const navPage = ROLE_NAV[role] || 'users';
+            const roleColor = ROLE_COLORS[role] || 'bg-muted text-muted-foreground border-border';
+            return (
+              <Card key={u.id} className="hover:border-primary/30 transition-colors">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="w-8 h-8 shrink-0">
+                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{(u.full_name || u.email || '?')[0]?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{u.full_name || u.email?.split('@')[0]}</div>
+                        <div className="text-xs text-muted-foreground truncate">{u.email}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="outline" className={`text-xs ${roleColor}`}>{role}</Badge>
+                      {onNavigate && (
+                        <Button size="sm" variant="outline" onClick={() => onNavigate(navPage)}>
+                          <Pencil className="w-3 h-3 mr-1" />
+                          {role === 'seller' ? 'Sellers' : role === 'admin' ? 'Dashboard' : 'Users'}
+                        </Button>
+                      )}
                     </div>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => openEditModal(`user:${u.id}`)}>
-                    <Pencil className="w-3 h-3 mr-1" /> Edit
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
-          ))}
+                </CardHeader>
+              </Card>
+            );
+          })}
         </div>
       </div>
 

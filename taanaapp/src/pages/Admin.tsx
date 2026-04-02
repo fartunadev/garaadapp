@@ -237,7 +237,7 @@ const Admin = () => {
           {currentPage === 'slides' && <SlidesPage />}
           {currentPage === 'addresses' && <AddressesPage />}
           {currentPage === 'settings' && <SettingsPage />}
-          {currentPage === 'roles' && <RolesPage />}
+          {currentPage === 'roles' && <RolesPage onNavigate={setCurrentPage} />}
         </main>
       </div>
 
